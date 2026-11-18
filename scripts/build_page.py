@@ -227,8 +227,8 @@ SRM: χ² = {f2(srm['chi2'])}, p = {f2(srm['p_value'], 4)}. Формально �
 
 <h2>Что дальше</h2>
 <p>Данных нет по выручке: ворота существуют ради неё. Решение о деньгах требует отдельной метрики.
-Подробности и правила — в <a href="../PLAN.md">PLAN.md</a>, полный текст — в
-<a href="../results/memo.md">results/memo.md</a>.</p>
+Подробности и правила — в <a href="https://github.com/Alex91132/ab-experiment-loop/blob/main/PLAN.md">PLAN.md</a>, полный текст — в
+<a href="https://github.com/Alex91132/ab-experiment-loop/blob/main/results/memo.md">меморандум</a>.</p>
 </main></body></html>
 """
     OUT.parent.mkdir(exist_ok=True)
