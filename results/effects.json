@@ -190,5 +190,17 @@
    ],
    "mean_significant": false
   }
+ },
+ "ratio_metrics": {
+  "heavy_rounds_share": {
+   "control_pct": 5.127,
+   "treatment_pct": 3.668,
+   "diff_pp": -1.459,
+   "ci_pp": [
+    -5.592,
+    2.674
+   ],
+   "significant": false
+  }
  }
 }

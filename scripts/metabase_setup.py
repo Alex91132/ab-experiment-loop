@@ -43,6 +43,14 @@ CARDS = [
         "viz": {"graph.dimensions": ["day"], "graph.metrics": ["z", "boundary"]},
     },
     {
+        "name": "Качество эксперимента (SRM)",
+        "description": "Размеры групп, хи-квадрат и отклонение от 50/50",
+        "display": "table",
+        "sql": ("SELECT rows, gate_30, gate_40, srm_chi2, srm_p, srm_shift_pp "
+                "FROM analytics.exp_quality"),
+        "viz": {},
+    },
+    {
         "name": "Эффекты по метрикам",
         "description": "Контроль, тест, разница и значимость",
         "display": "table",
@@ -143,17 +151,27 @@ def ensure_dashboard(session: str, card_ids: list[int]) -> int:
                 method="POST", session=session)
     dash_id = dash["id"]
 
-    sizes = [8, 8, 6]
-    rows = [0, 8, 16]
-    dashcards = [
-        {"id": -(i + 1), "card_id": card_id, "row": rows[i], "col": 0,
-         "size_x": 24, "size_y": sizes[i], "dashboard_tab_id": -1,
-         "parameter_mappings": [], "visualization_settings": {}}
-        for i, card_id in enumerate(card_ids)
+    layout = [
+        ("Эффект", [card_ids[0], card_ids[2]], [8, 6]),
+        ("Мониторинг", [card_ids[1]], [8]),
+        ("Качество", [card_ids[3]], [6]),
     ]
+    tabs = [{"id": -(i + 1), "name": name} for i, (name, _, _) in enumerate(layout)]
+
+    dashcards, index = [], 0
+    for tab_index, (_, ids, heights) in enumerate(layout):
+        row = 0
+        for card_id, height in zip(ids, heights):
+            index += 1
+            dashcards.append({
+                "id": -(100 + index), "card_id": card_id, "row": row, "col": 0,
+                "size_x": 24, "size_y": height, "dashboard_tab_id": tabs[tab_index]["id"],
+                "parameter_mappings": [], "visualization_settings": {}, "dashboard_id": dash_id,
+            })
+            row += height
+
     # в Metabase 0.6x карточки живут во вкладке: без tabs они не отрисуются
-    call(f"/api/dashboard/{dash_id}",
-         {"tabs": [{"id": -1, "name": "Обзор"}], "dashcards": dashcards},
+    call(f"/api/dashboard/{dash_id}", {"tabs": tabs, "dashcards": dashcards},
          method="PUT", session=session)
     return dash_id
 

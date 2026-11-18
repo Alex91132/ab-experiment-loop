@@ -93,6 +93,26 @@ def main() -> None:
         }
     effects["rounds"] = rounds
 
+    # ratio-метрика: какую долю всех раундов сыграли тяжёлые игроки (дельта-метод)
+    from experiment.advanced import delta_ratio_diff
+
+    num_c = np.where(df[df.version == CONTROL]["sum_gamerounds"] >= 1000,
+                     df[df.version == CONTROL]["sum_gamerounds"], 0.0)
+    den_c = df[df.version == CONTROL]["sum_gamerounds"].values.astype(float)
+    num_t = np.where(df[df.version == TREATMENT]["sum_gamerounds"] >= 1000,
+                     df[df.version == TREATMENT]["sum_gamerounds"], 0.0)
+    den_t = df[df.version == TREATMENT]["sum_gamerounds"].values.astype(float)
+    ratio = delta_ratio_diff(num_c, den_c, num_t, den_t)
+    effects["ratio_metrics"] = {
+        "heavy_rounds_share": {
+            "control_pct": round(ratio["control"] * 100, 3),
+            "treatment_pct": round(ratio["treatment"] * 100, 3),
+            "diff_pp": round(ratio["diff"] * 100, 3),
+            "ci_pp": [round(ratio["ci"][0] * 100, 3), round(ratio["ci"][1] * 100, 3)],
+            "significant": ratio["significant"],
+        }
+    }
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(effects, ensure_ascii=False, indent=1), encoding="utf-8")
 

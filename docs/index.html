@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookie Cats: анализ A/B-эксперимента</title>
+<style>
+:root { --ink:#1c2530; --muted:#5b6b7c; --line:#d7e0e8; --accent:#2b6cb0; --good:#2f855a; --bad:#c53030; }
+* { box-sizing: border-box; }
+body { margin:0; font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:#fbfcfd; }
+main { max-width: 920px; margin: 0 auto; padding: 48px 24px 80px; }
+h1 { font-size: 30px; line-height:1.25; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 40px 0 12px; }
+p.lead { color: var(--muted); margin: 0 0 24px; }
+.verdict { border-left:5px solid var(--bad); background:#fff; padding:16px 20px; border-radius:8px;
+           box-shadow: 0 1px 2px rgba(16,24,40,.06); }
+.verdict strong { display:block; font-size:18px; margin-bottom:6px; }
+table { border-collapse: collapse; width:100%; font-size:15px; background:#fff; }
+th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+thead th { color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.03em; }
+tfoot td { font-weight:600; }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-top:16px; }
+.muted { color:var(--muted); font-size:14px; }
+a { color: var(--accent); }
+.grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+</style></head>
+<body><main>
+<h1>Перенос «ворот» в Cookie Cats: стоит ли двигать</h1>
+<p class="lead">A/B-эксперимент на 90 189 игроках. Решение принято по правилам, зафиксированным до анализа.</p>
+
+<div class="verdict">
+  <strong>Решение: ворота оставить на 30-м уровне</strong>
+  Удержание на 7-й день значимо хуже: −0,82 п.п.
+  [-1,33; -0,31],
+  p после поправки Холма — 0,0032. Ухудшение выше чувствительности
+  эксперимента (MDE 0,7 п.п.), то есть это не «мало данных».
+</div>
+
+<h2>Основные метрики</h2>
+<table><thead><tr><th>Метрика</th><th>Контроль</th><th>Тест</th><th>Разница</th><th>95 % ДИ</th><th>p</th><th>p (Холм)</th></tr></thead>
+<tbody><tr><td>retention_1</td><td>44,82 %</td><td>44,23 %</td><td>-0,59 п.п.</td><td>[-1,24; +0,06]</td><td>0,0744</td><td>0,0744</td></tr><tr><td>retention_7</td><td>19,02 %</td><td>18,20 %</td><td>-0,82 п.п.</td><td>[-1,33; -0,31]</td><td>0,0016</td><td>0,0032</td></tr></tbody></table>
+<p class="muted">Удержание D1 не значимо: эффект −0,59 п.п. ниже MDE 0,9 п.п.,
+поэтому вывод — «недостаточно данных», а не «эффекта нет».</p>
+
+<h2>Предохранители</h2>
+<table><thead><tr><th>Метрика</th><th>Контроль</th><th>Тест</th><th>Разница</th><th>95 % ДИ</th></tr></thead>
+<tbody><tr><td>zero_rounds_share</td><td>4,33 %</td><td>4,52 %</td><td>+0,19 п.п.</td><td>[-0,08; +0,46]</td></tr><tr><td>heavy_users_share</td><td>0,12 %</td><td>0,14 %</td><td>+0,02 п.п.</td><td>[-0,02; +0,07]</td></tr></tbody></table>
+<p class='muted'>Доля раундов у тяжёлых игроков (дельта-метод): 5,13 % → 3,67 %, разница -1,46 п.п. [-5,59; +2,67] — не значимо.</p>
+
+<h2>Как шло накопление данных</h2>
+<div class="card"><svg viewBox="0 0 860 280" width="100%" role="img" aria-label="Разница D1 по дням">
+  <line x1="48" y1="217.2" x2="844" y2="217.2" stroke="#eef2f6"/><text x="40" y="221.2" font-size="11" fill="#5b6b7c" text-anchor="end">-4</text><line x1="48" y1="186.9" x2="844" y2="186.9" stroke="#eef2f6"/><text x="40" y="190.9" font-size="11" fill="#5b6b7c" text-anchor="end">-3</text><line x1="48" y1="156.6" x2="844" y2="156.6" stroke="#eef2f6"/><text x="40" y="160.6" font-size="11" fill="#5b6b7c" text-anchor="end">-2</text><line x1="48" y1="126.4" x2="844" y2="126.4" stroke="#eef2f6"/><text x="40" y="130.4" font-size="11" fill="#5b6b7c" text-anchor="end">-1</text><line x1="48" y1="96.1" x2="844" y2="96.1" stroke="#eef2f6"/><text x="40" y="100.1" font-size="11" fill="#5b6b7c" text-anchor="end">0</text><line x1="48" y1="65.8" x2="844" y2="65.8" stroke="#eef2f6"/><text x="40" y="69.8" font-size="11" fill="#5b6b7c" text-anchor="end">1</text><line x1="48" y1="35.6" x2="844" y2="35.6" stroke="#eef2f6"/><text x="40" y="39.6" font-size="11" fill="#5b6b7c" text-anchor="end">2</text>
+  <line x1="48" y1="96.1" x2="844" y2="96.1" stroke="#b9c6d3" stroke-dasharray="4 3"/>
+  <polygon points="48.0,25.1 75.4,35.8 102.9,63.5 130.3,50.3 157.8,34.7 185.2,44.4 212.7,48.6 240.1,63.2 267.6,63.2 295.0,65.7 322.5,69.7 349.9,86.1 377.4,92.7 404.8,94.6 432.3,96.5 459.7,95.0 487.2,95.7 514.6,94.1 542.1,91.2 569.5,89.3 597.0,91.1 624.4,93.0 651.9,96.5 679.3,98.1 706.8,101.0 734.2,99.5 761.7,99.2 789.1,98.7 816.6,97.0 844.0,94.4 844.0,133.6 816.6,137.0 789.1,139.4 761.7,140.5 734.2,141.7 706.8,144.0 679.3,141.9 651.9,141.3 624.4,138.8 597.0,138.0 569.5,137.4 542.1,140.6 514.6,144.9 487.2,147.9 459.7,148.8 432.3,152.0 404.8,152.1 377.4,152.3 349.9,148.3 322.5,134.5 295.0,133.7 267.6,134.8 240.1,139.2 212.7,129.9 185.2,132.2 157.8,130.6 130.3,157.6 102.9,188.0 75.4,188.2 48.0,238.9" fill="#2b6cb0" opacity="0.12"/>
+  <polyline points="48.0,132.0 75.4,112.0 102.9,125.8 130.3,103.9 157.8,82.7 185.2,88.3 212.7,89.3 240.1,101.2 267.6,99.0 295.0,99.7 322.5,102.1 349.9,117.2 377.4,122.5 404.8,123.3 432.3,124.3 459.7,121.9 487.2,121.8 514.6,119.5 542.1,115.9 569.5,113.4 597.0,114.5 624.4,115.9 651.9,118.9 679.3,120.0 706.8,122.5 734.2,120.6 761.7,119.8 789.1,119.1 816.6,117.0 844.0,114.0" fill="none" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="48.0" y="270" font-size="11" fill="#5b6b7c">1</text><text x="157.8" y="270" font-size="11" fill="#5b6b7c">5</text><text x="295.0" y="270" font-size="11" fill="#5b6b7c">10</text><text x="432.3" y="270" font-size="11" fill="#5b6b7c">15</text><text x="569.5" y="270" font-size="11" fill="#5b6b7c">20</text><text x="706.8" y="270" font-size="11" fill="#5b6b7c">25</text><text x="844.0" y="270" font-size="11" fill="#5b6b7c">30</text>
+  <text x="48" y="14" font-size="11" fill="#5b6b7c">разница, п.п. (95 % интервал — полоса)</text>
+</svg></div>
+
+<h2>Последовательный мониторинг</h2>
+<div class="card"><svg viewBox="0 0 860 260" width="100%" role="img" aria-label="Мониторинг">
+  <line x1="48" y1="228.0" x2="844" y2="228.0" stroke="#eef2f6"/><text x="40" y="232.0" font-size="11" fill="#5b6b7c" text-anchor="end">0</text><line x1="48" y1="190.3" x2="844" y2="190.3" stroke="#eef2f6"/><text x="40" y="194.3" font-size="11" fill="#5b6b7c" text-anchor="end">1</text><line x1="48" y1="152.5" x2="844" y2="152.5" stroke="#eef2f6"/><text x="40" y="156.5" font-size="11" fill="#5b6b7c" text-anchor="end">2</text><line x1="48" y1="114.8" x2="844" y2="114.8" stroke="#eef2f6"/><text x="40" y="118.8" font-size="11" fill="#5b6b7c" text-anchor="end">3</text><line x1="48" y1="77.1" x2="844" y2="77.1" stroke="#eef2f6"/><text x="40" y="81.1" font-size="11" fill="#5b6b7c" text-anchor="end">4</text><line x1="48" y1="39.4" x2="844" y2="39.4" stroke="#eef2f6"/><text x="40" y="43.4" font-size="11" fill="#5b6b7c" text-anchor="end">5</text>
+  <polyline points="48.0,38.6 207.2,93.9 366.4,118.4 525.6,133.1 684.8,143.2 844.0,150.6" fill="none" stroke="#38a169" stroke-width="2" stroke-dasharray="5 3"/>
+  <polyline points="48.0,207.3 207.2,220.2 366.4,153.1 525.6,174.8 684.8,137.1 844.0,160.7" fill="none" stroke="#553c9a" stroke-width="2"/>
+  <text x="48.0" y="250" font-size="11" fill="#5b6b7c">5</text><text x="207.2" y="250" font-size="11" fill="#5b6b7c">10</text><text x="366.4" y="250" font-size="11" fill="#5b6b7c">15</text><text x="525.6" y="250" font-size="11" fill="#5b6b7c">20</text><text x="684.8" y="250" font-size="11" fill="#5b6b7c">25</text><text x="844.0" y="250" font-size="11" fill="#5b6b7c">30</text>
+  <text x="48" y="14" font-size="11" fill="#5b6b7c">|z| (фиолетовая) и граница OBF (зелёная)</text>
+</svg>
+<p class="muted">Пересечение на день 25 — так работает остановка
+по границам O'Brien–Fleming: подглядывать можно, если границы заданы заранее.</p></div>
+
+<h2>Качество эксперимента</h2>
+<div class="card">
+<p>Группы: 45,489 и 44,700, отклонение от 50/50 — 0,44 п.п.<br>
+SRM: χ² = 6,90, p = 0,0086. Формально ниже 0,05, но практического сбоя рандомизации нет.</p>
+<p class="muted">Раунды: медиана 17 → 16;
+разница средних -1,16 исчезает без одного игрока с 49 854 раундами
+(-0,04).</p>
+</div>
+
+<h2>Что дальше</h2>
+<p>Данных нет по выручке: ворота существуют ради неё. Решение о деньгах требует отдельной метрики.
+Подробности и правила — в <a href="../PLAN.md">PLAN.md</a>, полный текст — в
+<a href="../results/memo.md">results/memo.md</a>.</p>
+</main></body></html>

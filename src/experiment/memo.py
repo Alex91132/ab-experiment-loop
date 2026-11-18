@@ -59,6 +59,12 @@ def render(effects: dict, eda: dict, verdict: Verdict, monitor: dict | None = No
         f"{signed(no_max['mean_diff'])}, то есть исчезает.")
     add(f"- Один этот игрок даёт {n(eda['rounds']['max_share_of_mean_pp'])} % суммы всех раундов, "
         "поэтому среднее здесь не показатель, а иллюстрация.")
+    ratio = effects.get("ratio_metrics", {}).get("heavy_rounds_share")
+    if ratio:
+        add(f"- Доля раундов, сыгранных тяжёлыми игроками (дельта-метод): "
+            f"{n(ratio['control_pct'])} % → {n(ratio['treatment_pct'])} %, "
+            f"разница {signed(ratio['diff_pp'])} п.п. {ci(ratio['ci_pp'])} — "
+            f"{'значимо' if ratio['significant'] else 'не значимо'}.")
     add("")
 
     if monitor:

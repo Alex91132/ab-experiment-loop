@@ -196,10 +196,22 @@ def step_publish(db_url: str | None = None) -> dict:
     effects = pd.read_json(RESULTS / "dag_effects.json", orient="index").reset_index()
     effects.columns = ["metric"] + list(effects.columns[1:])
 
+    # качество эксперимента — плоская таблица для карточки SRM
+    validation = json.loads((RESULTS / "validation.json").read_text(encoding="utf-8"))
+    quality = pd.DataFrame([{
+        "rows": validation["rows"],
+        "gate_30": validation["counts"].get("gate_30"),
+        "gate_40": validation["counts"].get("gate_40"),
+        "srm_chi2": validation["srm_chi2"],
+        "srm_p": validation["srm_p"],
+        "srm_shift_pp": validation["srm_shift_pp"],
+    }])
+
     tables = {
         "exp_daily_metrics": daily,
         "exp_sequential_looks": looks,
         "exp_effects": effects,
+        "exp_quality": quality,
     }
 
     engine = create_engine(url)
