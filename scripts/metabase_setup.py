@@ -144,12 +144,17 @@ def ensure_dashboard(session: str, card_ids: list[int]) -> int:
     dash_id = dash["id"]
 
     sizes = [8, 8, 6]
+    rows = [0, 8, 16]
     dashcards = [
-        {"id": -(i + 1), "card_id": card_id, "row": sum(sizes[:i]), "col": 0,
-         "size_x": 12, "size_y": sizes[i], "parameter_mappings": [], "visualization_settings": {}}
+        {"id": -(i + 1), "card_id": card_id, "row": rows[i], "col": 0,
+         "size_x": 24, "size_y": sizes[i], "dashboard_tab_id": -1,
+         "parameter_mappings": [], "visualization_settings": {}}
         for i, card_id in enumerate(card_ids)
     ]
-    call(f"/api/dashboard/{dash_id}", {"dashcards": dashcards}, method="PUT", session=session)
+    # в Metabase 0.6x карточки живут во вкладке: без tabs они не отрисуются
+    call(f"/api/dashboard/{dash_id}",
+         {"tabs": [{"id": -1, "name": "Обзор"}], "dashcards": dashcards},
+         method="PUT", session=session)
     return dash_id
 
 
