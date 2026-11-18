@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# данные не храним в репозитории: скачиваются scripts/fetch_data.py с проверкой SHA-256
+data/*.csv
+!data/sample.csv
+
+# Airflow
+airflow.cfg
+airflow.db
+logs/
+dags/__pycache__/
