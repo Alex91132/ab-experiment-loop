@@ -1,0 +1,37 @@
+{
+ "rows": [
+  {
+   "rho": 0.3,
+   "variance_reduction_pct": 8.9,
+   "se_raw": 0.00708,
+   "se_cuped": 0.00676,
+   "se_shrink_pct": 4.6,
+   "equivalent_sample_gain_pct": 9.8
+  },
+  {
+   "rho": 0.5,
+   "variance_reduction_pct": 24.8,
+   "se_raw": 0.00708,
+   "se_cuped": 0.00614,
+   "se_shrink_pct": 13.3,
+   "equivalent_sample_gain_pct": 33.0
+  },
+  {
+   "rho": 0.7,
+   "variance_reduction_pct": 48.8,
+   "se_raw": 0.00708,
+   "se_cuped": 0.00507,
+   "se_shrink_pct": 28.4,
+   "equivalent_sample_gain_pct": 95.3
+  },
+  {
+   "rho": 0.9,
+   "variance_reduction_pct": 80.9,
+   "se_raw": 0.00708,
+   "se_cuped": 0.0031,
+   "se_shrink_pct": 56.3,
+   "equivalent_sample_gain_pct": 423.1
+  }
+ ],
+ "n": 90189
+}

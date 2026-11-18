@@ -9,6 +9,15 @@ from __future__ import annotations
 from experiment.decide import Verdict
 from experiment.format import ci, n, signed, thousands
 
+import json
+from pathlib import Path
+
+
+def _load_cuped() -> dict | None:
+    """Демонстрация CUPED, если она посчитана."""
+    path = Path(__file__).resolve().parents[2] / "results" / "cuped_demo.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
 MDE = {"retention_1": 0.9, "retention_7": 0.7}   # п.п., из PLAN.md
 
 
@@ -96,6 +105,38 @@ def render(effects: dict, eda: dict, verdict: Verdict, monitor: dict | None = No
         add("Оговорка: прирост по дням синтетический, поэтому «день 25» — подвыборка, "
             "а не реальный промежуточный срез. Ценность раздела — в механике остановки, "
             "а не в конкретной дате.")
+        add("")
+
+    segments = effects.get("segments")
+    if segments:
+        add("## Сегменты")
+        add("")
+        add(f"Разбиение по активности: {segments['segments']} сегмента, значимых после поправки Холма — "
+            f"{segments['significant']}. Максимальная разница по модулю — "
+            f"{n(segments['max_abs_diff'])} п.п.")
+        if segments["names"]:
+            add(f"Значимые сегменты: {', '.join(segments['names'])}.")
+        add("")
+        add("Подробная таблица — `results/segments.csv`. Вывод по среднему без разбивки здесь был бы "
+            "грубее: эффект распределён неравномерно, и сегменты это показывают, а не «доказывают».")
+        add("")
+
+    cuped = _load_cuped()
+    if cuped:
+        add("## CUPED: что дал бы предпериод")
+        add("")
+        add("Предпериода в этих данных нет, поэтому метод показан на синтетическом «до» с заданной "
+            "корреляцией (та же метрика, реальные раунды):")
+        add("")
+        add("| ρ | снижение дисперсии | SE до | SE после | выигрыш выборки |")
+        add("|---:|---:|---:|---:|---:|")
+        for row in cuped["rows"]:
+            add(f"| {n(row['rho'], 1)} | {n(row['variance_reduction_pct'], 1)} % | "
+                f"{n(row['se_raw'], 4)} | {n(row['se_cuped'], 4)} | "
+                f"{n(row['equivalent_sample_gain_pct'], 0)} % |")
+        add("")
+        add("Снижение дисперсии совпадает с ρ² — как и должно быть теоретически. Это иллюстрация "
+            "метода, а не результат эксперимента: применять CUPED здесь не к чему.")
         add("")
 
     add("## Качество эксперимента")

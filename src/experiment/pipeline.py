@@ -175,6 +175,23 @@ def step_effects() -> dict:
     return out
 
 
+def step_memo() -> dict:
+    """Собирает меморандум из текущих артефактов — как шаг контура, а не вручную."""
+    import csv as _csv
+
+    from experiment.decide import decide
+    from experiment.memo import MDE, render
+
+    effects = json.loads((RESULTS / "effects.json").read_text(encoding="utf-8"))
+    eda = json.loads((RESULTS / "eda.json").read_text(encoding="utf-8"))
+    monitor = json.loads((RESULTS / "monitor.json").read_text(encoding="utf-8"))
+    looks = list(_csv.DictReader((LOOKS).open(encoding="utf-8")))
+    verdict = decide(effects["primary"], effects["guardrails"], MDE)
+    text = render(effects, eda, verdict, monitor=monitor, looks=looks)
+    (RESULTS / "memo.md").write_text(text, encoding="utf-8")
+    return {"path": str((RESULTS / "memo.md").relative_to(ROOT)), "chars": len(text)}
+
+
 def step_publish(db_url: str | None = None) -> dict:
     """Публикует витрины в Postgres, откуда их читает Metabase.
 
@@ -212,6 +229,7 @@ def step_publish(db_url: str | None = None) -> dict:
         "exp_sequential_looks": looks,
         "exp_effects": effects,
         "exp_quality": quality,
+        "exp_segments": pd.read_csv(RESULTS / "segments.csv"),
     }
 
     engine = create_engine(url)
@@ -260,6 +278,7 @@ STEPS = {
     "daily": step_daily_metrics,
     "monitor": step_monitor,
     "effects": step_effects,
+    "memo": step_memo,
     "publish": step_publish,
 }
 

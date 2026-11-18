@@ -113,6 +113,14 @@ def main() -> None:
         }
     }
 
+    # сегменты по активности: где эффект сильнее, где его нет
+    from experiment.segments import add_segments, segment_effects, summary as segment_summary
+
+    seg_df = add_segments(df)
+    segments = segment_effects(seg_df, by="activity")
+    segments.to_csv(ROOT / "results" / "segments.csv", index=False)
+    effects["segments"] = segment_summary(segments)
+
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(effects, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -130,6 +138,8 @@ def main() -> None:
         print(f"  {label}: медиана {r['control_median']:.0f} → {r['treatment_median']:.0f} "
               f"({r['median_diff']:+.2f}, [{r['median_ci'][0]:+.2f}; {r['median_ci'][1]:+.2f}]) | "
               f"среднее {r['control_mean']} → {r['treatment_mean']} ({r['mean_diff']:+.2f})")
+    print("\nсегменты по активности")
+    print(segments.to_string(index=False))
     print(f"\nнаписано: {OUT.relative_to(ROOT)}")
 
 

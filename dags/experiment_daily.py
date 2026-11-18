@@ -21,6 +21,7 @@ if str(PROJECT / "src") not in sys.path:
     sys.path.insert(0, str(PROJECT / "src"))
 
 from experiment import pipeline  # noqa: E402
+from experiment.alerts import check_alerts  # noqa: E402
 
 RESULTS = PROJECT / "results"
 
@@ -34,19 +35,10 @@ default_args = {
 def guard_check() -> None:
     """Падает, если данные или предохранители вышли за пределы — это и есть алерт."""
     validation = json.loads((RESULTS / "validation.json").read_text(encoding="utf-8"))
-    if validation["srm_p"] < 0.001 and validation["srm_shift_pp"] > 1.0:
-        raise AirflowException(
-            f"SRM: p={validation['srm_p']}, отклонение {validation['srm_shift_pp']} п.п. — "
-            "проверить рандомизацию до публикации результатов"
-        )
-
     effects = json.loads((RESULTS / "dag_effects.json").read_text(encoding="utf-8"))
-    broken = {name: row for name, row in effects.items()
-              if name in ("zero_rounds", "heavy_user") and row["significant"]
-              and ((name == "zero_rounds" and row["diff_pp"] > 0)
-                   or (name == "heavy_user" and row["diff_pp"] < 0))}
-    if broken:
-        raise AirflowException(f"guardrail сломан: {json.dumps(broken, ensure_ascii=False)}")
+    problems = check_alerts(validation, effects)
+    if problems:
+        raise AirflowException("; ".join(problems))
 
 
 with DAG(
@@ -65,6 +57,7 @@ with DAG(
     monitor = PythonOperator(task_id="sequential_monitor", python_callable=pipeline.step_monitor)
     effects = PythonOperator(task_id="effects", python_callable=pipeline.step_effects)
     publish = PythonOperator(task_id="publish_marts", python_callable=pipeline.step_publish)
+    memo = PythonOperator(task_id="render_memo", python_callable=pipeline.step_memo)
     guard = PythonOperator(task_id="guard_check", python_callable=guard_check)
 
-    ingest >> validate >> daily >> monitor >> effects >> publish >> guard
+    ingest >> validate >> daily >> monitor >> effects >> publish >> memo >> guard
