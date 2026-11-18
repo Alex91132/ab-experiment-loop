@@ -20,8 +20,18 @@ def main() -> None:
     effects = json.loads((ROOT / "results" / "effects.json").read_text(encoding="utf-8"))
     eda = json.loads((ROOT / "results" / "eda.json").read_text(encoding="utf-8"))
 
+    monitor_path = ROOT / "results" / "monitor.json"
+    looks_path = ROOT / "results" / "sequential_looks.csv"
+    monitor = json.loads(monitor_path.read_text(encoding="utf-8")) if monitor_path.exists() else None
+    looks = None
+    if looks_path.exists():
+        import csv
+
+        with looks_path.open(encoding="utf-8") as fh:
+            looks = list(csv.DictReader(fh))
+
     verdict = decide(effects["primary"], effects["guardrails"], MDE)
-    memo = render(effects, eda, verdict)
+    memo = render(effects, eda, verdict, monitor=monitor, looks=looks)
 
     out = ROOT / "results" / "memo.md"
     out.write_text(memo, encoding="utf-8")

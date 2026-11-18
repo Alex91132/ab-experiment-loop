@@ -12,7 +12,8 @@ from experiment.format import ci, n, signed, thousands
 MDE = {"retention_1": 0.9, "retention_7": 0.7}   # п.п., из PLAN.md
 
 
-def render(effects: dict, eda: dict, verdict: Verdict) -> str:
+def render(effects: dict, eda: dict, verdict: Verdict, monitor: dict | None = None,
+           looks: list[dict] | None = None) -> str:
     lines: list[str] = []
     add = lines.append
 
@@ -59,6 +60,37 @@ def render(effects: dict, eda: dict, verdict: Verdict) -> str:
     add(f"- Один этот игрок даёт {n(eda['rounds']['max_share_of_mean_pp'])} % суммы всех раундов, "
         "поэтому среднее здесь не показатель, а иллюстрация.")
     add("")
+
+    if monitor:
+        add("## Последовательный мониторинг (D1)")
+        add("")
+        add(f"Смотрели раз в неделю — {monitor['looks']} взглядов (дни "
+            + ", ".join(str(d) for d in monitor["look_days"]) + "), границы O'Brien–Fleming.")
+        if monitor.get("crossed_at_day"):
+            hit = next(r for r in (looks or []) if int(r["day"]) == int(monitor["crossed_at_day"]))
+            add("")
+            add(f"- Пересечение на день {monitor['crossed_at_day']}: z = "
+                f"{n(abs(float(hit['z'])))}, граница {n(float(hit['boundary']))}, разница "
+                f"{signed(float(hit['diff_pp']))} п.п. "
+                f"{ci([float(hit['ci_lo_pp']), float(hit['ci_hi_pp'])])}.")
+            add("- По правилам последовательного анализа на этом взгляде H0 отклоняется: "
+                "удержание D1 хуже.")
+        else:
+            add(f"- Граница не пересечена: финальный z = {n(abs(monitor['final_z']))} "
+                f"против границы {n(monitor['final_boundary'])}.")
+        add(f"- Финальный взгляд: z = {n(abs(monitor['final_z']))} при границе "
+            f"{n(monitor['final_boundary'])}.")
+        add("")
+        add("Это не противоречит основному тесту, а показывает его цену: обычный тест на "
+            "финале даёт p = 0,074 по D1 и «эффекта нет», а последовательный — отклоняет H0 "
+            "на 25-й день и требует остановки. Оба вывода согласуются с одним и тем же "
+            "направлением (вред), но цена раннего взгляда — консервативные границы. Именно "
+            "поэтому подглядывать в данные можно, если границы заданы заранее.")
+        add("")
+        add("Оговорка: прирост по дням синтетический, поэтому «день 25» — подвыборка, "
+            "а не реальный промежуточный срез. Ценность раздела — в механике остановки, "
+            "а не в конкретной дате.")
+        add("")
 
     add("## Качество эксперимента")
     add("")

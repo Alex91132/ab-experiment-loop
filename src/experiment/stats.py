@@ -135,32 +135,35 @@ def holm(pvalues: dict[str, float]) -> dict[str, dict]:
 
 # ----------------------------------------------------------------------------- последовательный мониторинг
 
-def obf_spending(t: float, alpha: float = 0.05) -> float:
-    """Функция расходования ошибки O'Brien–Fleming: сколько alpha потрачено к доле t."""
-    if not 0 < t <= 1:
-        raise ValueError("доля информации должна быть в (0; 1]")
-    z = Z.get(alpha) or stats.norm.ppf(1 - alpha / 2)
-    return float(2 - 2 * stats.norm.cdf(z / math.sqrt(t)))
+def obf_boundaries(times: list[float], alpha: float = 0.05, tol: float = 1e-5) -> list[float]:
+    """Точные границы O'Brien–Fleming: b_i = c / sqrt(t_i), константа из совместной вероятности.
 
-
-def obf_boundaries(times: list[float], alpha: float = 0.05) -> list[float]:
-    """Границы для промежуточных взглядов по функции расходования O'Brien–Fleming.
-
-    На каждом взгляде тратится только приращение alpha, поэтому суммарная
-    ошибка первого рода остаётся alpha: ранний взгляд требует очень сильного
-    эффекта (граница ~3,9 при t = 0,25), финальный — обычных 1,96.
+    Подбираем c так, чтобы при верной H0 вероятность хотя бы раз пересечь границу
+    равнялась alpha. Совместное распределение Z — многомерное нормальное с
+    корреляцией sqrt(t_i / t_j), вероятность считаем через его CDF.
     """
     ts = np.asarray(times, dtype=float)
-    if not np.all(np.diff(ts) > 0) or ts[-1] > 1.0:
-        raise ValueError("доли информации должны возрастать и не превышать 1")
+    if not np.all(np.diff(ts) > 0) or ts[-1] > 1.0 or ts[0] <= 0:
+        raise ValueError("доли информации должны возрастать, быть в (0; 1] и заканчиваться единицей")
 
-    boundaries, spent_before = [], 0.0
-    for t in ts:
-        spent = obf_spending(float(t), alpha)
-        increment = max(spent - spent_before, 1e-12)
-        boundaries.append(float(stats.norm.ppf(1 - increment / 2)))
-        spent_before = spent
-    return boundaries
+    corr = np.sqrt(np.minimum(ts[:, None], ts[None, :]) / np.maximum(ts[:, None], ts[None, :]))
+    mean = np.zeros(len(ts))
+
+    def not_crossed(c: float) -> float:
+        b = c / np.sqrt(ts)
+        return float(stats.multivariate_normal.cdf(b, mean=mean, cov=corr, lower_limit=-b))
+
+    lo, hi = 0.5, 8.0
+    for _ in range(100):
+        mid = (lo + hi) / 2
+        if not_crossed(mid) > 1 - alpha:      # пересекаем реже, чем нужно → границу можно сузить
+            hi = mid
+        else:
+            lo = mid
+        if hi - lo < tol:
+            break
+    c = (lo + hi) / 2
+    return [float(c / math.sqrt(t)) for t in ts]
 
 
 def sequential_decision(z_values: list[float], times: list[float], alpha: float = 0.05) -> dict:

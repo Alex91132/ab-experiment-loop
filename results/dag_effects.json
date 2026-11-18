@@ -1,0 +1,42 @@
+{
+ "retention_1": {
+  "control_pct": 44.819,
+  "treatment_pct": 44.228,
+  "diff_pp": -0.591,
+  "ci_pp": [
+   -1.239,
+   0.058
+  ],
+  "significant": false
+ },
+ "retention_7": {
+  "control_pct": 19.02,
+  "treatment_pct": 18.2,
+  "diff_pp": -0.82,
+  "ci_pp": [
+   -1.328,
+   -0.312
+  ],
+  "significant": true
+ },
+ "zero_rounds": {
+  "control_pct": 4.333,
+  "treatment_pct": 4.522,
+  "diff_pp": 0.189,
+  "ci_pp": [
+   -0.08,
+   0.457
+  ],
+  "significant": false
+ },
+ "heavy_user": {
+  "control_pct": 0.119,
+  "treatment_pct": 0.143,
+  "diff_pp": 0.024,
+  "ci_pp": [
+   -0.023,
+   0.071
+  ],
+  "significant": false
+ }
+}

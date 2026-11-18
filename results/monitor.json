@@ -1,0 +1,15 @@
+{
+ "looks": 6,
+ "look_days": [
+  5,
+  10,
+  15,
+  20,
+  25,
+  30
+ ],
+ "final_z": -1.784,
+ "final_boundary": 2.053,
+ "crossed_at_day": 25,
+ "decision": "эффект есть"
+}
