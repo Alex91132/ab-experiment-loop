@@ -66,6 +66,29 @@ python scripts/run_memo.py
 pytest -q                        # 27 тестов
 ```
 
+## Оркестрация и BI
+
+```bash
+docker-compose up -d --build       # Airflow 2.10 + Postgres + Metabase
+# Airflow:  http://localhost:8080  (admin / admin), DAG experiment_daily
+# Metabase: http://localhost:3000  (analytics@example.com / analytics123)
+python scripts/metabase_setup.py    # подключение к analytics, 3 карточки, дашборд
+```
+
+DAG `experiment_daily` каждый день пересчитывает контур:
+
+```
+ingest → validate → daily_metrics → sequential_monitor → effects → publish_marts → guard_check
+```
+
+- `validate` падает при SRM (p < 0,001 и отклонение больше 1 п.п.) или пропусках;
+- `sequential_monitor` строит еженедельные взгляды и границы O'Brien–Fleming;
+- `publish_marts` пишет витрины в схему `analytics` через `COPY FROM STDIN`;
+- `guard_check` падает, если предохранитель сломан — это и есть алерт в UI.
+
+Проверено на живом стеке: прогон DAG — 7 задач, все `success`; в Postgres
+`analytics.exp_daily_metrics` (30 строк), `exp_sequential_looks` (6), `exp_effects` (4).
+
 ## Чем проверено
 
 - **Статистика:** интервал Уилсона сверен с эталонным значением, z-тест — с ручным расчётом,

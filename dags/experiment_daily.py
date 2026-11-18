@@ -64,6 +64,7 @@ with DAG(
     daily = PythonOperator(task_id="daily_metrics", python_callable=pipeline.step_daily_metrics)
     monitor = PythonOperator(task_id="sequential_monitor", python_callable=pipeline.step_monitor)
     effects = PythonOperator(task_id="effects", python_callable=pipeline.step_effects)
+    publish = PythonOperator(task_id="publish_marts", python_callable=pipeline.step_publish)
     guard = PythonOperator(task_id="guard_check", python_callable=guard_check)
 
-    ingest >> validate >> daily >> monitor >> effects >> guard
+    ingest >> validate >> daily >> monitor >> effects >> publish >> guard

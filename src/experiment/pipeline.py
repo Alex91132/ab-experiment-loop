@@ -178,9 +178,11 @@ def step_effects() -> dict:
 def step_publish(db_url: str | None = None) -> dict:
     """Публикует витрины в Postgres, откуда их читает Metabase.
 
-    Без базы шаг не падает: возвращает `skipped`, чтобы DAG работал и в окружении
-    без Postgres (например, локальный прогон).
+    Пишем через COPY FROM STDIN: pandas.to_sql в контейнере Airflow не распознаёт
+    соединение SQLAlchemy, а COPY и быстрее, и без версионных сюрпризов.
+    Без базы шаг не падает: возвращает `skipped`, чтобы DAG работал и локально.
     """
+    import io
     import os
 
     from sqlalchemy import create_engine, text
@@ -189,7 +191,6 @@ def step_publish(db_url: str | None = None) -> dict:
     if not url:
         return {"skipped": True, "reason": "ANALYTICS_DB_URL не задан"}
 
-    engine = create_engine(url)
     daily = pd.read_csv(DAILY)
     looks = pd.read_csv(LOOKS)
     effects = pd.read_json(RESULTS / "dag_effects.json", orient="index").reset_index()
@@ -200,12 +201,45 @@ def step_publish(db_url: str | None = None) -> dict:
         "exp_sequential_looks": looks,
         "exp_effects": effects,
     }
-    with engine.begin() as conn:
-        conn.execute(text("CREATE SCHEMA IF NOT EXISTS analytics"))
-    for name, frame in tables.items():
-        frame.to_sql(name, engine, schema="analytics", if_exists="replace", index=False)
+
+    engine = create_engine(url)
+    raw = engine.raw_connection()
+    try:
+        cursor = raw.cursor()
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS analytics")
+        for name, frame in tables.items():
+            _publish_table(cursor, name, frame)
+        raw.commit()
+    finally:
+        raw.close()
 
     return {"schema": "analytics", "tables": {name: int(len(frame)) for name, frame in tables.items()}}
+
+
+def _sql_type(series: pd.Series) -> str:
+    kind = series.dtype.kind
+    if kind == "b":
+        return "boolean"
+    if kind in "iu":
+        return "bigint"
+    if kind == "f":
+        return "double precision"
+    return "text"
+
+
+def _publish_table(cursor, name: str, frame: pd.DataFrame) -> None:
+    """Полная перезапись таблицы через COPY: идемпотентно и без pandas.to_sql."""
+    import io
+
+    columns = [f'"{c}"' for c in frame.columns]
+    definitions = ", ".join(f'"{c}" {_sql_type(frame[c])}' for c in frame.columns)
+    cursor.execute(f"DROP TABLE IF EXISTS analytics.{name}")
+    cursor.execute(f"CREATE TABLE analytics.{name} ({definitions})")
+
+    buffer = io.StringIO()
+    frame.to_csv(buffer, index=False, header=False)
+    buffer.seek(0)
+    cursor.copy_expert(f"COPY analytics.{name} ({', '.join(columns)}) FROM STDIN WITH CSV", buffer)
 
 
 STEPS = {
