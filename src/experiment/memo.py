@@ -1,0 +1,97 @@
+"""Генератор меморандума: собирает решение и числа из results/ в один текст.
+
+Меморандум — то, что аналитик реально отдаёт: не графики, а ответ на вопрос,
+насколько ему можно верить и что проверить дальше.
+"""
+
+from __future__ import annotations
+
+from experiment.decide import Verdict
+from experiment.format import ci, n, signed, thousands
+
+MDE = {"retention_1": 0.9, "retention_7": 0.7}   # п.п., из PLAN.md
+
+
+def render(effects: dict, eda: dict, verdict: Verdict) -> str:
+    lines: list[str] = []
+    add = lines.append
+
+    add("# Меморандум: перенос «ворот» в Cookie Cats с 30-го на 40-й уровень")
+    add("")
+    add(f"**Решение: {verdict.headline.lower()}** (правило {verdict.rule} из плана).")
+    add("")
+    for reason in verdict.reasons:
+        add(f"- {reason}")
+    add("")
+
+    add("## Основные метрики")
+    add("")
+    add("| Метрика | Контроль (30) | Тест (40) | Разница | 95 % ДИ | p | MDE |")
+    add("|---|---:|---:|---:|---|---:|---:|")
+    for name, row in effects["primary"].items():
+        add(f"| {name} | {n(row['control']['rate_pct'])} % | {n(row['treatment']['rate_pct'])} % | "
+            f"{signed(row['diff_pp'])} п.п. | {ci(row['diff_ci_pp'])} | {n(row['p_value'], 4)} | "
+            f"{n(MDE[name], 1)} п.п. |")
+    add("")
+    add("Поправка Холма на две метрики: "
+        + ", ".join(f"{name} → p = {n(row['p_holm'], 4)}" for name, row in effects["primary"].items()) + ".")
+    add("")
+
+    add("## Предохранители")
+    add("")
+    add("| Метрика | Контроль | Тест | Разница | 95 % ДИ |")
+    add("|---|---:|---:|---:|---|")
+    for name, row in effects["guardrails"].items():
+        add(f"| {name} | {n(row['control']['rate_pct'])} % | {n(row['treatment']['rate_pct'])} % | "
+            f"{signed(row['diff_pp'])} п.п. | {ci(row['diff_ci_pp'])} |")
+    add("")
+
+    add("## Раунды и выбросы")
+    add("")
+    rounds = effects["rounds"]
+    all_r, no_max = rounds["all"], rounds["without_max"]
+    add(f"- Медиана: {n(all_r['control_median'], 0)} → {n(all_r['treatment_median'], 0)} "
+        f"({signed(all_r['median_diff'], 0)} раунда), интервал {ci(all_r['median_ci'], 0)}.")
+    add(f"- Среднее: {n(all_r['control_mean'])} → {n(all_r['treatment_mean'])} "
+        f"({signed(all_r['mean_diff'])}).")
+    add(f"- Без одного игрока с {thousands(eda['rounds']['max'])} раундами разница средних — "
+        f"{signed(no_max['mean_diff'])}, то есть исчезает.")
+    add(f"- Один этот игрок даёт {n(eda['rounds']['max_share_of_mean_pp'])} % суммы всех раундов, "
+        "поэтому среднее здесь не показатель, а иллюстрация.")
+    add("")
+
+    add("## Качество эксперимента")
+    add("")
+    srm = eda["srm"]
+    add(f"- Размеры групп: {thousands(srm['counts']['gate_40'])} и "
+        f"{thousands(srm['counts']['gate_30'])}, отклонение от 50/50 — {n(srm['max_shift_pp'])} п.п.")
+    add(f"- SRM: χ² = {n(srm['chi2'])}, p = {n(srm['p_value'], 4)}. Формально это ниже 0,05, "
+        f"но отклонение {n(srm['max_shift_pp'])} п.п. — практического сбоя рандомизации нет: "
+        "при 90 тыс. игроков даже доли процента дают значимость.")
+    add(f"- Пропусков: {eda['missing']}, дублей userid: {eda['duplicate_userids']}.")
+    add("")
+
+    add("## Ограничения")
+    add("")
+    add("- **Нет выручки.** Решение сформулировано по удержанию; денежный эффект ворот эти данные "
+        "не показывают.")
+    add("- **Нет предпериода**, поэтому CUPED применить не на чем — метод реализован, но здесь "
+        "не используется.")
+    add("- **Один срез** (14 дней после установки), не поток: для ежедневного пересчёта данные "
+        "разворачиваются по дням, и это указано в README.")
+    add("")
+
+    add("## Что перепроверить")
+    add("")
+    add("- Если есть возможность — повторить с мощностью под эффект 0,5 п.п. по D1: текущий "
+        "эксперимент такие эффекты не различает.")
+    add("- Проверить, не изменился ли состав трафика между группами по стране и платформе "
+        "(здесь этих полей нет — это следующий шаг, а не вывод).")
+    add("- Перед решением о деньгах добавить метрику выручки: ворота существуют ради неё, "
+        "и удержание может падать при росте дохода.")
+    add("")
+    add("---")
+    add("")
+    add("Числа воспроизводятся: `python scripts/run_eda.py && python scripts/run_effects.py && "
+        "python scripts/run_memo.py`; проверяются тестами `tests/test_claims.py`.")
+    return "\n".join(lines) + "\n"
