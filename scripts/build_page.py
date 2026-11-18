@@ -144,6 +144,66 @@ def chart_monitor(rows: list[dict], width: int = 860, height: int = 260) -> str:
 </svg>"""
 
 
+NOTEBOOK_FIGURES = [
+    ("fig1_rounds.png", "Распределение раундов: тяжёлый хвост",
+     "Медиана 16, среднее 52, максимум 49 854. Поэтому средние раунды сравнивать нельзя без оговорок, а медиана устойчива."),
+    ("fig2_retention.png", "Удержание D1 и D7 с интервалами Уилсона",
+     "Разница маленькая: интервалы почти соприкасаются. Уже здесь видно, что эффект на границе чувствительности."),
+    ("fig3_forest.png", "Все эффекты с 95 % интервалами",
+     "D7 не пересекает ноль, D1 — пересекает. Guardrails спокойны, доля раундов у тяжёлых измерена широко из-за выброса."),
+    ("fig4_mde.png", "Чувствительность: MDE против объёма",
+     "При 45 000 игроках на группу различимы ~0,9 п.п. по D1. Чтобы поймать 0,5 п.п., нужно примерно втрое больше."),
+    ("fig5_sequential.png", "Последовательный мониторинг",
+     "|z| против границы O'Brien–Fleming: на 25-м дне линия выходит за границу, к 30-му возвращается. Так выглядит честная остановка."),
+    ("fig6_daily.png", "Сужение интервала по дням",
+     "Интервал сужается с накоплением данных, а сам эффект остаётся около −0,6 п.п. — данных больше, эффект не появился."),
+    ("fig7_segments.png", "Эффект по сегментам активности",
+     "После поправки Холма значимых сегментов нет: эффект не сконцентрирован ни в одном из четырёх."),
+    ("fig8_cuped.png", "CUPED против теории",
+     "Фактическое снижение дисперсии ложится на кривую ρ² — реализация верна. Метод показан, но не применён: предпериода в данных нет."),
+]
+
+
+def build_notebook_page() -> None:
+    """Страница с графиками ноутбука: их видно, не запуская Jupyter."""
+    import shutil
+
+    figures_dir = OUT.parent / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    for name, _, _ in NOTEBOOK_FIGURES:
+        source = RESULTS / "figures" / name
+        if source.exists():
+            shutil.copy2(source, figures_dir / name)
+
+    blocks = []
+    for name, title, caption in NOTEBOOK_FIGURES:
+        blocks.append(
+            f'<section><h2>{title}</h2>'
+            f'<img src="figures/{name}" alt="{title}" loading="lazy">'
+            f'<p class="muted">{caption}</p></section>'
+        )
+
+    html = f"""<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Графики эксперимента: Cookie Cats</title>
+<style>{CSS}
+img {{ width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }}
+section {{ margin-top: 32px; }}
+</style></head>
+<body><main>
+<h1>Графики эксперимента</h1>
+<p class="lead">Восемь рисунков из ноутбука — те же расчёты, что в отчёте. Полный разбор с кодом:
+<a href="https://github.com/Alex91132/ab-experiment-loop/blob/main/notebooks/experiment_tour.ipynb">notebooks/experiment_tour.ipynb</a> ·
+<a href="index.html">← к результатам</a></p>
+{''.join(blocks)}
+</main></body></html>
+"""
+    path = OUT.parent / "notebook.html"
+    path.write_text(html, encoding="utf-8")
+    print(f"собрано: {path.relative_to(ROOT)} ({len(html) / 1024:.0f} КБ)")
+
+
 def main() -> None:
     effects = load("effects.json")
     eda = load("eda.json")
@@ -187,7 +247,8 @@ def main() -> None:
 <style>{CSS}</style></head>
 <body><main>
 <h1>Перенос «ворот» в Cookie Cats: стоит ли двигать</h1>
-<p class="lead">A/B-эксперимент на 90 189 игроках. Решение принято по правилам, зафиксированным до анализа.</p>
+<p class="lead">A/B-эксперимент на 90 189 игроках. Решение принято по правилам, зафиксированным до анализа.
+<a href="notebook.html">Графики эксперимента →</a></p>
 
 <div class="verdict">
   <strong>Решение: ворота оставить на 30-м уровне</strong>
@@ -234,6 +295,7 @@ SRM: χ² = {f2(srm['chi2'])}, p = {f2(srm['p_value'], 4)}. Формально �
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(html, encoding="utf-8")
     print(f"собрано: {OUT.relative_to(ROOT)} ({len(html) / 1024:.0f} КБ)")
+    build_notebook_page()
 
 
 if __name__ == "__main__":

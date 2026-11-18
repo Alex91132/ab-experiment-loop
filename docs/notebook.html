@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Графики эксперимента: Cookie Cats</title>
+<style>
+:root { --ink:#1c2530; --muted:#5b6b7c; --line:#d7e0e8; --accent:#2b6cb0; --good:#2f855a; --bad:#c53030; }
+* { box-sizing: border-box; }
+body { margin:0; font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:#fbfcfd; }
+main { max-width: 920px; margin: 0 auto; padding: 48px 24px 80px; }
+h1 { font-size: 30px; line-height:1.25; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 40px 0 12px; }
+p.lead { color: var(--muted); margin: 0 0 24px; }
+.verdict { border-left:5px solid var(--bad); background:#fff; padding:16px 20px; border-radius:8px;
+           box-shadow: 0 1px 2px rgba(16,24,40,.06); }
+.verdict strong { display:block; font-size:18px; margin-bottom:6px; }
+table { border-collapse: collapse; width:100%; font-size:15px; background:#fff; }
+th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:right; }
+th:first-child, td:first-child { text-align:left; }
+thead th { color:var(--muted); font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.03em; }
+tfoot td { font-weight:600; }
+.card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-top:16px; }
+.muted { color:var(--muted); font-size:14px; }
+a { color: var(--accent); }
+.grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+img { width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
+section { margin-top: 32px; }
+</style></head>
+<body><main>
+<h1>Графики эксперимента</h1>
+<p class="lead">Восемь рисунков из ноутбука — те же расчёты, что в отчёте. Полный разбор с кодом:
+<a href="https://github.com/Alex91132/ab-experiment-loop/blob/main/notebooks/experiment_tour.ipynb">notebooks/experiment_tour.ipynb</a> ·
+<a href="index.html">← к результатам</a></p>
+<section><h2>Распределение раундов: тяжёлый хвост</h2><img src="figures/fig1_rounds.png" alt="Распределение раундов: тяжёлый хвост" loading="lazy"><p class="muted">Медиана 16, среднее 52, максимум 49 854. Поэтому средние раунды сравнивать нельзя без оговорок, а медиана устойчива.</p></section><section><h2>Удержание D1 и D7 с интервалами Уилсона</h2><img src="figures/fig2_retention.png" alt="Удержание D1 и D7 с интервалами Уилсона" loading="lazy"><p class="muted">Разница маленькая: интервалы почти соприкасаются. Уже здесь видно, что эффект на границе чувствительности.</p></section><section><h2>Все эффекты с 95 % интервалами</h2><img src="figures/fig3_forest.png" alt="Все эффекты с 95 % интервалами" loading="lazy"><p class="muted">D7 не пересекает ноль, D1 — пересекает. Guardrails спокойны, доля раундов у тяжёлых измерена широко из-за выброса.</p></section><section><h2>Чувствительность: MDE против объёма</h2><img src="figures/fig4_mde.png" alt="Чувствительность: MDE против объёма" loading="lazy"><p class="muted">При 45 000 игроках на группу различимы ~0,9 п.п. по D1. Чтобы поймать 0,5 п.п., нужно примерно втрое больше.</p></section><section><h2>Последовательный мониторинг</h2><img src="figures/fig5_sequential.png" alt="Последовательный мониторинг" loading="lazy"><p class="muted">|z| против границы O'Brien–Fleming: на 25-м дне линия выходит за границу, к 30-му возвращается. Так выглядит честная остановка.</p></section><section><h2>Сужение интервала по дням</h2><img src="figures/fig6_daily.png" alt="Сужение интервала по дням" loading="lazy"><p class="muted">Интервал сужается с накоплением данных, а сам эффект остаётся около −0,6 п.п. — данных больше, эффект не появился.</p></section><section><h2>Эффект по сегментам активности</h2><img src="figures/fig7_segments.png" alt="Эффект по сегментам активности" loading="lazy"><p class="muted">После поправки Холма значимых сегментов нет: эффект не сконцентрирован ни в одном из четырёх.</p></section><section><h2>CUPED против теории</h2><img src="figures/fig8_cuped.png" alt="CUPED против теории" loading="lazy"><p class="muted">Фактическое снижение дисперсии ложится на кривую ρ² — реализация верна. Метод показан, но не применён: предпериода в данных нет.</p></section>
+</main></body></html>
