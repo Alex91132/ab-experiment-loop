@@ -13,3 +13,4 @@ airflow.cfg
 airflow.db
 logs/
 dags/__pycache__/
+.jupyter/

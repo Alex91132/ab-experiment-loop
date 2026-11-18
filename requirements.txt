@@ -1,8 +1,15 @@
-# Ядро анализа — без Airflow, чтобы расчёты можно было проверять отдельно.
+﻿# Ядро анализа — без Airflow, чтобы расчёты можно было проверять отдельно.
 pandas==3.0.5
 numpy==2.4.6
 scipy==1.17.1
 pytest==9.1.1
+
+# Ноутбук и графики
+matplotlib==3.9.2
+nbformat==5.10.4
+nbclient==0.10.0
+ipykernel==6.29.5
+jupyter-client==8.6.3
 
 # Оркестрация и BI — ставятся отдельно (см. docker-compose.yml)
 # apache-airflow==2.10.5
